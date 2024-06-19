@@ -1,10 +1,9 @@
 const mongoose = require('mongoose');
 
-const appointmentSchema = new mongoose.Schema({
+const followUpConsultationSchema = new mongoose.Schema({
     patient: { 
         type: mongoose.Schema.Types.ObjectId, 
-        ref: 'Patient', 
-        required: true 
+        ref: 'Patient', required: true 
     },
     provider: { 
         type: mongoose.Schema.Types.ObjectId, 
@@ -15,19 +14,21 @@ const appointmentSchema = new mongoose.Schema({
         type: Date, 
         required: true 
     },
-    time: { 
+    newSymptoms: { type: String, 
+        required: true 
+    },
+    diagnosis: { 
         type: String, 
         required: true 
     },
-    reason: { 
+    treatment: { 
         type: String, 
         required: true 
     },
-    status: {
-        type: String,
-        enum: ['pending', 'confirmed', 'canceled'],
-        default:    'pending'
-    }
+    medications: [{ 
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: 'Medication' 
+    }]
 });
 
-const Appointment = mongoose.model('Appointment', appointmentSchema);
+const FollowUpConsultation = mongoose.model('FollowUpConsultation', followUpConsultationSchema);
