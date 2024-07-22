@@ -20,3 +20,4 @@ const medicalHistorySchema = new mongoose.Schema({
 });
 
 const MedicalHistory = mongoose.model('MedicalHistory', medicalHistorySchema);
+module.exports = MedicalHistory;

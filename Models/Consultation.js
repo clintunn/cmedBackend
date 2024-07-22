@@ -15,7 +15,7 @@ const consultationSchema = new mongoose.Schema({
 },
     historyOfPresentIllness: {
         type: String,
-        require: true
+        required: true
     },
     physicalExamination: {
         type: String,
@@ -32,3 +32,4 @@ const consultationSchema = new mongoose.Schema({
 });
 
 const Consultation = mongoose.model('Consultation', consultationSchema);
+module.exports = Consultation;

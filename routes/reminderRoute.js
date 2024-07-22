@@ -1,4 +1,5 @@
-const router = require('express').Router;
+const express = require('express');
+const router = express.Router();
 const Reminder = require('../Models/Reminder');
 const Patient = require('../Models/Patient');
 
@@ -73,3 +74,5 @@ router.delete('/:reminderId', async (req, res) => {
         res.status(400).json({ error: e.message })
     }
 })
+
+module.exports = router;

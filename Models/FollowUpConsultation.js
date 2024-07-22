@@ -32,3 +32,4 @@ const followUpConsultationSchema = new mongoose.Schema({
 });
 
 const FollowUpConsultation = mongoose.model('FollowUpConsultation', followUpConsultationSchema);
+module.exports = FollowUpConsultation;

@@ -1,4 +1,5 @@
-const router = require('express').Router;
+const express = require('express');
+const router = express.Router();
 const Medication = require('../Models/medication');
 
 // create medication
@@ -68,3 +69,6 @@ router.delete('./medicationId', async(req, res) => {
         res.status(400).json({ message: e.message });
     }
 });
+
+
+module.exports = router;

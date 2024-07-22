@@ -1,4 +1,5 @@
-const router = require('express').Router;
+const express = require('express');
+const router = express.Router();
 const InteractionHistory = require('../Models/InteractionHistory')
 
 // create Interaction History

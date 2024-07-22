@@ -13,6 +13,10 @@ const patientSchema = new mongoose.Schema({
         type: String, 
         required: true 
     },
+    clinicId: {
+        type: Number,
+        required: true
+    },
     medicalHistory: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'MedicalHistory'
@@ -36,3 +40,4 @@ const patientSchema = new mongoose.Schema({
 });
 
 const Patient = mongoose.model('Patient', patientSchema);
+module.exports = Patient;
