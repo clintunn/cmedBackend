@@ -31,7 +31,7 @@ router.post(
             const messageId = uuidv4(); // Unique identifier for the message
 
             // Call OpenAI API
-            const aiResponse = await axios.post('https://api.openai.com/v1/completions', {
+            const aiResponse = await axios.post('', {
                 prompt: `Patient symptoms: ${message}\nPossible diagnosis:`,
                 model: 'text-davinci-003',
                 max_tokens: 150
