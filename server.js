@@ -31,7 +31,7 @@ app.use(session({
     secret: 'qwertyuiop1234567890',
     resave: false,
     saveUninitialized: false,
-    store: MongoStore.create({ mongoUrl: 'mongodb+srv://Campus-Med:o3jrR4A5GGurKR1N@cluster0.umrdntl.mongodb.net/' }),
+    store: MongoStore.create({ mongoUrl: process.env.MONGO_URI }),
     cookie: { 
         secure: process.env.NODE_ENV === 'production', // use secure cookies in production
         maxAge: 1000 * 60 * 60 * 24 // 24 hours
