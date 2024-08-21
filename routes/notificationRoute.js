@@ -84,6 +84,21 @@ router.patch('/:notificationId/read', authMiddleware, async (req, res) => {
     }
 });
 
+//
+router.post('/remove-appointment-request', authMiddleware, async (req, res) => {
+    try {
+      const { appointmentId } = req.body;
+      await Notification.deleteMany({ 
+        relatedId: appointmentId, 
+        type: 'new_appointment_request',
+        recipientModel: 'HealthcareProvider'
+      });
+      res.status(200).json({ message: 'Appointment request notifications removed' });
+    } catch (error) {
+      res.status(500).json({ message: 'Error removing notifications', error: error.message });
+    }
+  });
+
 // Delete a notification
 router.delete('/:notificationId', authMiddleware, async (req, res) => {
     try {

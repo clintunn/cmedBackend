@@ -26,6 +26,10 @@ const consultationSchema = new mongoose.Schema({
     treatment: { type: String, 
     required: true 
 },
+medicationPrescriptions: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'MedicationPrescription'
+}],
     medications: [{ 
     type: mongoose.Schema.Types.ObjectId, 
     ref: 'Medication' }]

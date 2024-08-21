@@ -12,51 +12,105 @@ const authMiddleware = (req, res, next) => {
 };
 
 //Creating Appointment
-router.post('/', async(req, res)=> {
+// In appointmentRoute.js
+
+router.post('/request', authMiddleware, async (req, res) => {
     try {
-        const { providerId, date, time, reason } = req.body;
-    const patientId = req.user.patientId; // Assuming the patient ID is available in the request object
+      const { date, time, reason } = req.body;
+      const patient = await Patient.findOne({ user: req.user._id });
+      
+      if (!patient) {
+        return res.status(404).json({ error: 'Patient not found' });
+      }
+  
+      const newAppointment = new Appointment({
+        patient: patient._id,
+        date,
+        time,
+        reason,
+        status: 'pending'
+      });
+      
+      await newAppointment.save();
+  
+      // Create a notification for all healthcare providers
+      const providers = await HealthcareProvider.find();
+      const notifications = providers.map(provider => ({
+        recipient: provider._id,
+        recipientModel: 'HealthcareProvider',
+        type: 'new_appointment_request',
+        relatedId: newAppointment._id,
+        relatedModel: 'Appointment',
+        message: `New appointment request from ${patient.name} on ${date} at ${time}`
+      }));
+  
+      await Notification.insertMany(notifications);
+  
+      res.status(201).json(newAppointment);
+    } catch (error) {
+      res.status(400).json({ message: error.message });
+    }
+  });
 
-    // Find the patient and provider
-    const patient = await Patient.findById(patientId);
-    const provider = await HealthcareProvider.findById(providerId);
-
-    if (!patient || !provider) {
-        return res.status(404).json({ error: 'Patient or provider not found' });
-        }
-
-        // Create a new appointment
-        const newAppointment = new Appointment({
-        patient: patientId,
+// Get available time slots for a specific date and provider
+router.get('/available-slots', async (req, res) => {
+    try {
+      const { providerId, date } = req.query;
+      // Implement logic to find available time slots
+      // This would involve checking the provider's schedule and existing appointments
+      const availableSlots = []; // Populate this array with available time slots
+      res.json(availableSlots);
+    } catch (error) {
+      res.status(500).json({ message: 'Error fetching available slots', error: error.message });
+    }
+  });
+  
+  // Schedule a new appointment
+  router.post('/schedule', authMiddleware, async (req, res) => {
+    try {
+      const { providerId, date, time, reason } = req.body;
+      const newAppointment = new Appointment({
+        patient: req.user._id,
         provider: providerId,
         date,
         time,
         reason,
-        status: 'pending',
-        });
-
-        const savedAppointment = await newAppointment.save();
-
-        res.status(201).json(savedAppointment);
-    } catch (e) {
-        res.status(400).json({ error: e.message });
+        status: 'pending'
+      });
+      await newAppointment.save();
+      res.status(201).json(newAppointment);
+    } catch (error) {
+      res.status(400).json({ message: 'Error scheduling appointment', error: error.message });
     }
-});
-
-// Get Appointment by ID
-// Get all appointment requests for a healthcare provider
-router.get('./appointmentId', async(req, res)=> {
+  });
+  
+  // Get appointments for the logged-in user (patient or provider)
+  router.get('/my-appointments', authMiddleware, async (req, res) => {
     try {
-        const providerId = req.user.providerId; // Assuming the provider ID is available in the request object
-    
-        const appointmentRequests = await Appointment.find({ provider: providerId, status: 'pending' });
-    
-        res.json(appointmentRequests);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
+      const query = req.user.role === 'patient' 
+        ? { patient: req.user._id }
+        : { provider: req.user._id };
+      const appointments = await Appointment.find(query).populate('patient provider');
+      res.json(appointments);
+    } catch (error) {
+      res.status(500).json({ message: 'Error fetching appointments', error: error.message });
     }
-});
-
+  });
+  
+  // Update appointment status
+  router.put('/:appointmentId', authMiddleware, async (req, res) => {
+    try {
+      const { status } = req.body;
+      const updatedAppointment = await Appointment.findByIdAndUpdate(
+        req.params.appointmentId,
+        { status },
+        { new: true }
+      );
+      res.json(updatedAppointment);
+    } catch (error) {
+      res.status(400).json({ message: 'Error updating appointment', error: error.message });
+    }
+  });
 
 
 // In your appointment route file
@@ -83,28 +137,28 @@ router.get('/pending', authMiddleware, async (req, res) => {
     }
 });
 
-// Update Appointment
-// In your appointment route file
-router.put('/:appointmentId', authMiddleware, async (req, res) => {
-    try {
-        const { status } = req.body;
-        const appointmentId = req.params.appointmentId;
+// // Update Appointment
+// // In your appointment route file
+// router.put('/:appointmentId', authMiddleware, async (req, res) => {
+//     try {
+//         const { status } = req.body;
+//         const appointmentId = req.params.appointmentId;
     
-        const updatedAppointment = await Appointment.findByIdAndUpdate(
-            appointmentId,
-            { status },
-            { new: true }
-        );
+//         const updatedAppointment = await Appointment.findByIdAndUpdate(
+//             appointmentId,
+//             { status },
+//             { new: true }
+//         );
     
-        if (!updatedAppointment) {
-            return res.status(404).json({ error: 'Appointment not found' });
-        }
+//         if (!updatedAppointment) {
+//             return res.status(404).json({ error: 'Appointment not found' });
+//         }
     
-        res.json(updatedAppointment);
-    } catch (err) {
-        res.status(400).json({ error: err.message });
-    }
-});
+//         res.json(updatedAppointment);
+//     } catch (err) {
+//         res.status(400).json({ error: err.message });
+//     }
+// });
 
 // Delete Appointment
 router.delete('/:appointmentId', async(req, res) => {

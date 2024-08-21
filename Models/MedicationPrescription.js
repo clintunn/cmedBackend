@@ -5,9 +5,7 @@ const medicationPrescriptionSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId, 
         ref: 'Consultation', 
         required: true },
-    medication: { type: mongoose.Schema.Types.ObjectId, 
-        ref: 'Medication', 
-        required: true },
+        medication: { type: String, required: true },
     });
 
 const MedicationPrescription = mongoose.model('MedicationPrescription', medicationPrescriptionSchema);

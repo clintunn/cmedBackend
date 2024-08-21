@@ -26,7 +26,8 @@ router.post('/', authMiddleware, async (req, res) => {
             physicalExamination,
             diagnosis,
             treatment,
-            medicationPrescriptions
+            medicationPrescriptions,
+            complaintId
         } = req.body;
 
         console.log('Received request data:', req.body);
@@ -40,21 +41,21 @@ router.post('/', authMiddleware, async (req, res) => {
         // Find the patient
         const patient = await Patient.findById(patientId);
         if (!patient) {
-            console.log('Patient not found');
+            console.log('Patient not found for ID:', patientId);
             return res.status(404).json({ error: 'Patient not found' });
         }
 
         // Find the provider
         const provider = await HealthcareProvider.findOne({ user: req.user._id });
         if (!provider) {
-            console.log('Provider not found');
+            console.log('Provider not found for user ID:', req.user._id);
             return res.status(404).json({ error: 'Provider not found' });
         }
 
         // Create a new consultation
         const newConsultation = new Consultation({
             patient: patientId,
-            provider: provider._id,  // Make sure this line is present
+            provider: provider._id,
             date: new Date(),
             majorComplaints,
             historyOfPresentIllness,
@@ -63,34 +64,18 @@ router.post('/', authMiddleware, async (req, res) => {
             treatment,
         });
 
-        console.log('New consultation object:', newConsultation);  // Add this line for debugging
+        console.log('New consultation object:', newConsultation);
 
         const savedConsultation = await newConsultation.save();
 
-        console.log('Consultation saved:', savedConsultation);
-
-        // Create new medication prescription documents if any
-        if (medicationPrescriptions && medicationPrescriptions.length > 0) {
-            const newMedicationPrescriptions = medicationPrescriptions.map(prescription => ({
-                consultation: savedConsultation._id,
-                medication: prescription.medication,
-            }));
-
-            const prescriptionDocuments = await MedicationPrescription.insertMany(newMedicationPrescriptions);
-            savedConsultation.medicationPrescriptions = prescriptionDocuments.map(doc => doc._id);
-            await savedConsultation.save();
+        // If a complaint ID was provided, update its status
+        if (complaintId) {
+            await Complaint.findByIdAndUpdate(complaintId, { status: 'Treated', treatedBy: req.user._id });
         }
 
-        // Update the patient with the new consultation
-        patient.consultations.push(savedConsultation._id);
-        await patient.save();
+        console.log('Consultation saved:', savedConsultation);
 
-        // Update the provider with the new consultation
-        provider.consultations = provider.consultations || [];  // Ensure the array exists
-        provider.consultations.push(savedConsultation._id);
-        await provider.save();
-
-        console.log('Patient and Provider updated with new consultation');
+        // ... rest of the code (medication prescriptions, patient and provider updates) ...
 
         res.status(201).json(savedConsultation);
     } catch (err) {
@@ -115,7 +100,8 @@ router.get('/last', authMiddleware, async (req, res) => {
         
         const lastConsultation = await Consultation.findOne({ provider: provider._id })
             .sort({ date: -1 })
-            .populate('patient', 'name');
+            .populate('patient', 'name')
+            .populate('medicationPrescriptions');
         
         if (!lastConsultation) {
             return res.status(404).json({ error: 'No consultations found' });

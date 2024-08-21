@@ -27,6 +27,10 @@ const appointmentSchema = new mongoose.Schema({
         type: String,
         enum: ['pending', 'confirmed', 'canceled'],
         default:    'pending'
+    },
+    reminder: {
+        type: Date,
+        required: true
     }
 });
 
